@@ -2,7 +2,7 @@ const getData = async () => {
   await fetch(
     'https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/GDP-data.json'
   )
-    .then((response) => response.json().then((data) => show(data)))
+    .then((response) => response.json().then((data) => displayChart(data)))
     .then(hideloader());
 };
 getData();
@@ -11,9 +11,8 @@ function hideloader() {
   document.getElementById('loading').style.display = 'none';
 }
 
-const show = (data) => {
+const displayChart = (data) => {
   const dataset = data.data;
-  console.log(dataset);
   const w = 800;
   const h = 400;
   const padding = 50;
@@ -59,7 +58,7 @@ const show = (data) => {
   const xAxis = d3.axisBottom(xScale);
   const yAxis = d3.axisLeft(yScale);
 
-  const rectWidth = (w - padding) / dataset.length;
+  const rectWidth = (w - padding - padding) / dataset.length;
 
   svg
     .append('g')
@@ -73,7 +72,7 @@ const show = (data) => {
     .call(yAxis.tickFormat(d3.format('d')));
 
   const tooltip = d3
-    .select('svg')
+    .select('container')
     .append('div')
     .attr('id', 'tooltip')
     .style('opacity', 0);
@@ -119,33 +118,23 @@ const show = (data) => {
     .attr('height', (d) => h - yScale(d[1]) - padding)
     .attr('index', (d, i) => i)
     .style('fill', '#33adff')
-    .on('mouseover', function (event, d) {
-      var i = this.getAttribute('index');
-      overlay
-        .transition()
-        .duration(0)
-        .style('height', d + 'px')
-        .style('width', rectWidth + 'px')
-        .style('opacity', 0.9)
-        .style('left', i * rectWidth + 0 + 'px')
-        .style('top', h - d + 'px')
-        .style('transform', 'translateX(60px)');
-      tooltip.transition().duration(200).style('opacity', 0);
+    .on('mouseover', function (d, i) {
+      d3.select(this).transition().duration('50').attr('opacity', '.85');
+      tooltip.transition().duration(50).style('opacity', 1);
+      const index = this.getAttribute('index');
       tooltip
         .html(
-          years[i] +
+          years[index] +
             '<br>' +
             '$' +
-            GDP[i].toFixed(1).replace(/(\d)(?=(\d{3})+\.)/g, '$1,') +
+            GDP[index].toFixed(1).replace(/(\d)(?=(\d{3})+\.)/g, '$1,') +
             ' Billion'
         )
-        .attr('data-date', dataset[i][0])
-        .style('left', i * rectWidth + 30 + 'px')
-        .style('top', h - 100 + 'px')
-        .style('transform', 'translateX(60px)');
+        .style('left', d.pageX + 10 + 'px')
+        .style('top', d.pageY - 15 + 'px');
     })
-    .on('mouseout', function () {
-      tooltip.transition().duration(200).style('opacity', 0);
-      overlay.transition().duration(200).style('opacity', 0);
+    .on('mouseout', function (d, i) {
+      d3.select(this).transition().duration('50').attr('opacity', '1');
+      tooltip.transition().duration('50').style('opacity', 0);
     });
 };
