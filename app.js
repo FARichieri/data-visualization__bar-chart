@@ -3,7 +3,8 @@ const getData = async () => {
     'https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/GDP-data.json'
   )
     .then((response) => response.json().then((data) => displayChart(data)))
-    .then(hideloader());
+    .then(hideloader())
+    .catch((error) => console.log(error));
 };
 getData();
 
@@ -13,15 +14,14 @@ function hideloader() {
 
 const displayChart = (data) => {
   const dataset = data.data;
-  const w = 800;
-  const h = 400;
+  const w = 600;
+  const h = 280;
   const padding = 50;
 
   const svg = d3
-    .select('body')
+    .select('.container')
     .append('svg')
-    .attr('width', w)
-    .attr('height', h);
+    .attr('viewBox', `0 0 ${w} ${h}`);
 
   svg
     .append('text')
@@ -29,19 +29,23 @@ const displayChart = (data) => {
     .attr('x', w / 2)
     .attr('y', padding)
     .attr('text-anchor', 'middle')
+    .style('fill', 'green')
+    .style('font-size', '2rem')
     .text('United States GDP');
 
   svg
     .append('text')
     .attr('transform', 'rotate(-90)')
-    .attr('x', -250)
+    .attr('x', -200)
     .attr('y', 80)
+    .style('font-size', '.7rem')
     .text('Gross Domestic Product');
 
   svg
     .append('text')
-    .attr('x', w / 2 - 100)
-    .attr('y', h + 0)
+    .attr('x', w / 2 - 50)
+    .attr('y', h - 10)
+    .style('font-size', '0.6rem')
     .text('More Information: http://www.bea.gov/national/pdf/nipaguid.pdf')
     .attr('class', 'info');
 
@@ -72,15 +76,9 @@ const displayChart = (data) => {
     .call(yAxis.tickFormat(d3.format('d')));
 
   const tooltip = d3
-    .select('container')
+    .select('.container')
     .append('div')
     .attr('id', 'tooltip')
-    .style('opacity', 0);
-
-  const overlay = d3
-    .select('svg')
-    .append('div')
-    .attr('class', 'overlay')
     .style('opacity', 0);
 
   const years = dataset.map(function (item) {
@@ -96,7 +94,6 @@ const displayChart = (data) => {
     } else if (temp === '10') {
       quarter = 'Q4';
     }
-
     return item[0].substring(0, 4) + ' ' + quarter;
   });
 
@@ -117,10 +114,10 @@ const displayChart = (data) => {
     .attr('width', rectWidth)
     .attr('height', (d) => h - yScale(d[1]) - padding)
     .attr('index', (d, i) => i)
-    .style('fill', '#33adff')
+    .style('fill', 'green')
     .on('mouseover', function (d, i) {
       d3.select(this).transition().duration('50').attr('opacity', '.85');
-      tooltip.transition().duration(50).style('opacity', 1);
+      tooltip.transition().duration(100).style('opacity', 1);
       const index = this.getAttribute('index');
       tooltip
         .html(
@@ -130,11 +127,12 @@ const displayChart = (data) => {
             GDP[index].toFixed(1).replace(/(\d)(?=(\d{3})+\.)/g, '$1,') +
             ' Billion'
         )
+        .attr('data-date', dataset[index][0])
         .style('left', d.pageX + 10 + 'px')
-        .style('top', d.pageY - 15 + 'px');
+        .style('top', d.pageY + 10 + 'px');
     })
     .on('mouseout', function (d, i) {
       d3.select(this).transition().duration('50').attr('opacity', '1');
-      tooltip.transition().duration('50').style('opacity', 0);
+      tooltip.transition().duration(100).style('opacity', 0);
     });
 };
